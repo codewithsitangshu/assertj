@@ -69,3 +69,81 @@ public class StringTest {
 
 }
 ```
+
+Chaining various string checks
+
+```java
+String actual = "I am a test automation engineer";
+assertThat(actual).doesNotStartWith("engineer")
+                  .doesNotEndWith("automation")
+                  .doesNotContain("developer")
+                  .contains("test");
+```
+
+# Boolean Verification with AssertJ
+
+``` Java
+@Test
+public void test() {
+    boolean actual = true;
+    assertThat(actual).isTrue();
+    assertThat(actual).isEqualTo(true);
+    assertThat(actual).withFailMessage("Value is not false")
+            .isFalse();
+}
+```
+
+# Not null / blank check
+
+```Java
+assertThat(actual).isNotNull()
+                  .isNotBlank();
+```
+
+# Integer Verification with AssertJ
+
+```java
+assertThat(10).isBetween(5,15);
+assertThat(10).isPositive()
+                     .isGreaterThan(8)
+                     .isLessThan(12);
+```
+
+# Date Verification with AssertJ
+
+Dealing with date assertions are little bit annoying in general. AssertJ handles that very easily.
+
+```java
+LocalDate today = LocalDate.now();
+LocalDate yesterday = LocalDate.now().minusDays(1);
+LocalDate tomorrow = LocalDate.now().plusDays(1);
+
+// Verify LocalDate properties
+assertThat(today)
+    .isAfter(yesterday) // Ensure today is after yesterday
+    .isBefore(tomorrow) // Ensure today is before tomorrow
+    .hasMonthValue(4) // Verify month value is 4 (April)
+    .hasMonth(Month.APRIL) // Verify month is April
+    .hasYear(2024) // Verify year is 2024
+    .hasDayOfMonth(7); // Verify day of month is 7
+```
+
+You can also use date in String format as shown here.
+
+```java
+assertThat(today).isAfter("2023-01-01").isBefore("2026-12-31");
+```
+
+Chaining various date related assertions together.
+
+```java
+// Create a new Date object
+Date date = new Date();
+
+// Verify Date properties using AssertJ assertions
+assertThat(date)
+    .hasMonth(4) // Verify that the month is April (4)
+    .hasDayOfMonth(7) // Verify that the day of the month is 7
+    .hasHourOfDay(15) // Verify that the hour of the day is 15 (3 PM)
+    .hasMinute(15); // Verify that the minute is 15
+```
