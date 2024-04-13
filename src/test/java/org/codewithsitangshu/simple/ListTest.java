@@ -17,16 +17,16 @@ public class ListTest {
         List<String> expectedWithAnyOrder = Arrays.asList("car","ball","apple");
 
         assertThat(actual)
-                .hasSizeGreaterThanOrEqualTo(2) // Size of the list
-                .hasSize(3) // validate exact size
-                .doesNotContain("cat") // validate it should not contain cat
-                .contains("car") // should contain car as one element
-                .containsAll(expected) //should contain all element of expected list
+                .hasSizeGreaterThanOrEqualTo(2)
+                .hasSize(3)
+                .doesNotContain("cat")
+                .contains("car")
+                .containsAll(expected)
                 .containsExactly(expectedWithSameOrder.toArray(new String[expectedWithSameOrder.size()]))
                 .containsExactlyInAnyOrder(expectedWithAnyOrder.toArray(new String[expectedWithAnyOrder.size()]))
                 .containsExactlyElementsOf(expectedWithSameOrder)
                 .containsExactlyInAnyOrderElementsOf(expectedWithAnyOrder)
-                .allSatisfy(str -> assertThat(str.length()).isGreaterThanOrEqualTo(3)); // satisfy for all elements
+                .allSatisfy(str -> assertThat(str.length()).isGreaterThanOrEqualTo(3));
 
 
     }

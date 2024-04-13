@@ -1,0 +1,4 @@
+AssertJ is a powerful assertion library for Java that provides fluent and intuitive APIs for writing expressive and readable tests.
+With AssertJ, developers can easily verify the behavior of their code by chaining together various assertions to form comprehensive test cases.
+AssertJ offers a rich set of features, allowing developers to assert on different data types, including collections, strings, numbers, and dates, with ease.
+By leveraging AssertJ's capabilities, developers can write more robust and maintainable tests, leading to improved software quality and reliability.

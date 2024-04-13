@@ -8,7 +8,7 @@ Automated testing is a cornerstone of modern software development, ensuring reli
 
 # Maven
 
-To include AssertJ in your Java project, include below maven dependency in your pom file. Check the maven repo <a href="https://mvnrepository.com/artifact/org.assertj/assertj-core" target="_blank">here</a> for the latest versions.
+To include AssertJ in your Java project, include below maven dependency in your pom file. Check the maven repo [here](https://mvnrepository.com/artifact/org.assertj/assertj-core) for the latest versions
 
 ``` xml
 <dependency>
@@ -147,3 +147,124 @@ assertThat(date)
     .hasHourOfDay(15) // Verify that the hour of the day is 15 (3 PM)
     .hasMinute(15); // Verify that the minute is 15
 ```
+
+### List Verification with AssertJ
+
+Let's see how AssertJ verify below verification points for a list.  
+
+- **List Size**: Verify that the list has at least 2 elements.
+- **List Size**: Verify that the list has exactly 3 elements.
+- **Containment**: Verify that the list does not contain "cat".
+- **Containment**: Verify that the list contains "car".
+- **Containment**: Verify that the list contains all elements in the expected list.
+- **Order Preservation**: Verify the exact order of elements in the list.
+- **Element Order Flexibility**: Verify that the list contains all expected elements in any order.
+- **Element Comparison**: Verify that the list contains all elements, irrespective of order, from the expected list.
+- **Flexibility in Element Comparison**: Verify that the list contains all elements in any order, irrespective of order, from the expected list.
+- **Element Properties**: Verify that all elements in the list have a length greater than or equal to 3.
+
+```java
+@Test(dataProvider = "getData")
+public void test(List<String> actual) {
+
+    // Define expected lists
+    List<String> expected = Arrays.asList("car","ball");
+    List<String> expectedWithSameOrder = Arrays.asList("ball","apple","car");
+    List<String> expectedWithAnyOrder = Arrays.asList("car","ball","apple");
+
+    // AssertJ assertions on the actual list
+    assertThat(actual)
+            .hasSizeGreaterThanOrEqualTo(2) // Verify that list has at least 2 elements
+            .hasSize(3) // Verify that list has exactly 3 elements
+            .doesNotContain("cat") // Verify that list does not contain "cat"
+            .contains("car") // Verify that list contains "car"
+            .containsAll(expected) // Verify that list contains all elements in the expected list
+            .containsExactly(expectedWithSameOrder.toArray(new String[expectedWithSameOrder.size()])) // Verify exact order of elements
+            .containsExactlyInAnyOrder(expectedWithAnyOrder.toArray(new String[expectedWithAnyOrder.size()])) // Verify elements in any order
+            .containsExactlyElementsOf(expectedWithSameOrder) // Verify exact elements irrespective of order
+            .containsExactlyInAnyOrderElementsOf(expectedWithAnyOrder) // Verify elements in any order irrespective of order
+            .allSatisfy(str -> assertThat(str.length()).isGreaterThanOrEqualTo(3)); // Verify all elements satisfy a condition
+
+}
+
+@DataProvider
+public Object[] getData(){
+    return new Object[] {
+            Arrays.asList("ball", "apple", "car")
+    };
+}
+```
+### File Verification with AssertJ
+
+First, I create a simple file with below content and save it as src/test/resources/file1.txt. <br>
+File contains...
+
+```text
+AssertJ is a powerful assertion library for Java that provides fluent and intuitive APIs for writing expressive and readable tests.
+With AssertJ, developers can easily verify the behavior of their code by chaining together various assertions to form comprehensive test cases.
+AssertJ offers a rich set of features, allowing developers to assert on different data types, including collections, strings, numbers, and dates, with ease.
+By leveraging AssertJ's capabilities, developers can write more robust and maintainable tests, leading to improved software quality and reliability.
+```
+Now verify few properties and existence check for that file.
+
+```java
+@Test
+    public void verifyFileProperties() {
+        File actualFile = Paths.get("src/test/resources/file1.txt").toFile();
+        assertThat(actualFile)
+                .canRead() // Verify that file1 is readable
+                .canWrite() // Verify that file1 is writable
+                .hasName("file1.txt") // Verify the name of file1
+                .hasExtension("txt") // Verify the extension of file1
+                .hasParent("src/test/resources"); // Verify the parent directory of file1
+    }
+```
+
+Now create one more file with some different text and save it as src/test/resources/file2.txt. <br>
+File contains...
+
+```text
+AssertJ a powerful assertion library for Java that provides fluent and intuitive APIs for writing expressive and readable tests.
+With AssertJ, developers can easily verify the behavior of their code by chaining together various assertions to form comprehensive test cases.
+AssertJ offers a rich set of features, allowing developers to assert on different data types, including collections, strings, numbers, and dates, with ease.
+By leveraging AssertJ capabilities, developers can write more robust and maintainable tests, leading to improved software quality and reliability.
+```
+Now compare this 2 files and let's see the output.
+
+```java
+@Test
+public void compareFiles() {
+    File actualFile = Paths.get("src/test/resources/file1.txt").toFile();
+    File expectedFile = Paths.get("src/test/resources/file2.txt").toFile();
+
+    assertThat(actualFile)
+            .exists() // Verify that actualFile exists
+            .isFile() // Verify that actualFile is a regular file
+            .hasSameTextualContentAs(expectedFile); // Verify that actualFile has the same content as expectedFile
+}
+```
+
+Output
+
+``` output
+java.lang.AssertionError: 
+File:
+  D:\Workspace\Github Projects\assertj\src\test\resources\file1.txt
+and file:
+  D:\Workspace\Github Projects\assertj\src\test\resources\file2.txt
+do not have same content:
+
+Changed content at line 1:
+expecting:
+  ["AssertJ a powerful assertion library for Java that provides fluent and intuitive APIs for writing expressive and readable tests."]
+but was:
+  ["AssertJ is a powerful assertion library for Java that provides fluent and intuitive APIs for writing expressive and readable tests."]
+
+Changed content at line 4:
+expecting:
+  ["By leveraging AssertJ capabilities, developers can write more robust and maintainable tests, leading to improved software quality and reliability."]
+but was:
+  ["By leveraging AssertJ's capabilities, developers can write more robust and maintainable tests, leading to improved software quality and reliability."]
+```
+
+
