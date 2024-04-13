@@ -148,7 +148,7 @@ assertThat(date)
     .hasMinute(15); // Verify that the minute is 15
 ```
 
-### List Verification with AssertJ
+# List Verification with AssertJ
 
 Let's see how AssertJ verify below verification points for a list.  
 
@@ -194,7 +194,7 @@ public Object[] getData(){
     };
 }
 ```
-### File Verification with AssertJ
+# File Verification with AssertJ
 
 First, I create a simple file with below content and save it as src/test/resources/file1.txt. <br>
 File contains...
@@ -268,3 +268,95 @@ but was:
 ```
 
 
+# CSV Verification with AssertJ
+
+Let's assume we have 2 cvs files. Both are having same context but order is slightly different. 
+If you want to do an exact match, use the above file compare approach. 
+If the records order do not matter, we will follow the same approach we did for list compare. <br>
+
+![CSV](CSV.JPG)
+
+If we want to compare both csv files like the way we compare files then we can use below code.
+
+```java
+@Test
+public void compareFiles() {
+    File actualFile = Paths.get("src/test/resources/data1.csv").toFile();
+    File expectedFile = Paths.get("src/test/resources/data2.csv").toFile();
+
+    assertThat(actualFile)
+            .exists() // Verify that actualFile exists
+            .isFile() // Verify that actualFile is a regular file
+            .hasSameTextualContentAs(expectedFile); // Verify that actualFile has the same content as expectedFile
+}
+```
+Output
+
+``` output
+java.lang.AssertionError: 
+File:
+  D:\Workspace\Github Projects\assertj\src\test\resources\data1.csv
+and file:
+  D:\Workspace\Github Projects\assertj\src\test\resources\data2.csv
+do not have same content:
+
+Missing content at line 3:
+  ["Emily Brown,101 Pine St,1004"]
+
+Missing content at line 5:
+  ["Daniel Lee,202 Maple St,1005"]
+
+Extra content at line 7:
+  ["Emily Brown,101 Pine St,1004",
+   "Daniel Lee,202 Maple St,1005"]
+```
+
+Now if we want to read CVs files line by line and store it into List. Now we can compare the order of the CVS file as well the way we compare List previously. <br>
+
+Below code compare 2 file contains. Order is not verified.
+
+```java
+@Test
+public void compareCVS() throws IOException {
+    List<String > actual = Files.readAllLines(Paths.get("src/test/resources/data1.csv"));
+    List<String > expected = Files.readAllLines(Paths.get("src/test/resources/data2.csv"));
+
+    assertThat(actual).containsAll(expected);
+}
+```
+Same can be verified using below code.
+
+```java
+assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
+```
+
+if we want to verify the order then use below code.
+
+```java
+assertThat(actual).containsExactlyElementsOf(expected);
+```
+
+Error output is.
+
+``` output
+java.lang.AssertionError: 
+Expecting actual:
+  ["EmployeeName,EmployeeAddress,EmployeeID",
+    "John Doe,123 Main St,1001",
+    "Jane Smith,456 Elm St,1002",
+    "Michael Johnson,789 Oak St,1003",
+    "Emily Brown,101 Pine St,1004",
+    "Daniel Lee,202 Maple St,1005"]
+to contain exactly (and in same order):
+  ["EmployeeName,EmployeeAddress,EmployeeID",
+    "John Doe,123 Main St,1001",
+    "Emily Brown,101 Pine St,1004",
+    "Jane Smith,456 Elm St,1002",
+    "Daniel Lee,202 Maple St,1005",
+    "Michael Johnson,789 Oak St,1003"]
+but there were differences at these indexes:
+  - element at index 2: expected "Emily Brown,101 Pine St,1004" but was "Jane Smith,456 Elm St,1002"
+  - element at index 3: expected "Jane Smith,456 Elm St,1002" but was "Michael Johnson,789 Oak St,1003"
+  - element at index 4: expected "Daniel Lee,202 Maple St,1005" but was "Emily Brown,101 Pine St,1004"
+  - element at index 5: expected "Michael Johnson,789 Oak St,1003" but was "Daniel Lee,202 Maple St,1005"
+```
