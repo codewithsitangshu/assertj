@@ -8,7 +8,7 @@ Automated testing is a cornerstone of modern software development, ensuring reli
 
 # Maven
 
-To include AssertJ in your Java project, include below maven dependency in your pom file. Check the maven repo [here](https://mvnrepository.com/artifact/org.assertj/assertj-core) for the latest versions
+To include AssertJ in your Java project, include below maven dependency in your pom file. Check the maven repo <a href="https://mvnrepository.com/artifact/org.assertj/assertj-core" target="_blank">here</a> for the latest versions.
 
 ``` xml
 <dependency>
