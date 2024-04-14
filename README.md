@@ -606,3 +606,39 @@ public class HomePageTest extends BaseTest {
 ```
 
 # AssertJ Custom Soft Assertions For Selenium WebDriver:
+
+Let's see how to make the above AssertJ custom assertion to a soft assertion. <br>
+
+- Create another WebElementSoftAssert class which extends SoftAssertions.
+
+```java
+public class WebElementSoftAssert extends SoftAssertions {
+
+    public WebElementAssert assertThat(WebElement actual){
+        return proxy(WebElementAssert.class, WebElement.class, actual);
+    }
+
+}
+```
+This returns one proxy object of WebElementAssert class.
+
+- Have this below method in your BasePage or BaseTest or utility class.
+
+```java
+protected void assertSoftly(Consumer<WebElementSoftAssert> assertConsumer) {
+    WebElementSoftAssert softAssert = new WebElementSoftAssert();
+    assertConsumer.accept(softAssert);
+    softAssert.assertAll();
+}
+```
+
+- Then write your assertion as usual.
+
+```java
+assertSoftly(s -> {
+            s.assertThat(homeButton)
+                    .isDisplayed()
+                    .isEnabled()
+                    .isClickable(wait);
+});
+```
