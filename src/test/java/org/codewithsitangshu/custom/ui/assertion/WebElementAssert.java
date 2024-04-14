@@ -53,4 +53,26 @@ public class WebElementAssert extends AbstractAssert<WebElementAssert, WebElemen
         return this;
     }
 
+    public WebElementAssert isButton(){
+        isNotNull();
+
+        //check condition
+        if(!(actual.getTagName().equalsIgnoreCase("button") || actual.getAttribute("type").equalsIgnoreCase("button"))){
+            failWithMessage("Expected element to be a button. But was not!!");
+        }
+
+        return this;
+    }
+
+    public WebElementAssert isLink(){
+        isNotNull();
+
+        //check condition
+        if(!actual.getTagName().equalsIgnoreCase("a")){
+            failWithMessage("Expected element to be a link. But was not!!");
+        }
+
+        return this;
+    }
+
 }

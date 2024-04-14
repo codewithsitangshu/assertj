@@ -360,3 +360,249 @@ but there were differences at these indexes:
   - element at index 4: expected "Daniel Lee,202 Maple St,1005" but was "Emily Brown,101 Pine St,1004"
   - element at index 5: expected "Michael Johnson,789 Oak St,1003" but was "Daniel Lee,202 Maple St,1005"
 ```
+
+# Soft Assertions in AssertJ
+
+Soft assertions in AssertJ allow you to collect multiple failures during a test without aborting immediately after the first failure. 
+Instead, all failures are aggregated and reported at the end of the test. This is useful in scenarios where you want to verify multiple conditions in a single test case. <br>
+
+To enable soft assertions in AssertJ, you can use the `SoftAssertions` class, which provides methods for performing assertions in a soft manner. 
+Soft assertions can be particularly handy in scenarios where you want to verify the state of an object after performing multiple operations, ensuring that all expected conditions are met without prematurely failing the test. <br>
+
+By using soft assertions, you can create more robust and informative tests, providing a comprehensive view of the test results even in the presence of multiple failures. <br>
+
+The same list example we can have here.
+
+```java
+@Test(dataProvider = "getData")
+public void test(List<String> actual) {
+    List<String> expected = Arrays.asList("car","ball");
+    List<String> expectedWithSameOrder = Arrays.asList("apple","car","ball");
+    List<String> expectedWithAnyOrder = Arrays.asList("car","ball","apple");
+
+    SoftAssertions.assertSoftly(s -> {
+        s.assertThat(actual).hasSizeGreaterThanOrEqualTo(2)
+                .hasSize(3)
+                .doesNotContain("cat")
+                .contains("car")
+                .containsAll(expected)
+                .containsExactly(expectedWithSameOrder.toArray(new String[expectedWithSameOrder.size()])) //here it should fail
+                .containsExactlyInAnyOrder(expectedWithAnyOrder.toArray(new String[expectedWithAnyOrder.size()]))
+                .containsExactlyElementsOf(expectedWithSameOrder)
+                .containsExactlyInAnyOrderElementsOf(expectedWithAnyOrder)
+                .allSatisfy(str -> assertThat(str.length()).isGreaterThanOrEqualTo(3));
+    });
+}
+
+@DataProvider
+public Object[] getData(){
+    return new Object[] {
+            Arrays.asList("ball", "apple", "car")
+    };
+}
+```
+
+Output
+
+``` output
+org.assertj.core.api.SoftAssertionError: 
+The following 2 assertions failed:
+1) 
+Expecting actual:
+  ["ball", "apple", "car"]
+to contain exactly (and in same order):
+  ["apple", "car", "ball"]
+but there were differences at these indexes:
+  - element at index 0: expected "apple" but was "ball"
+  - element at index 1: expected "car" but was "apple"
+  - element at index 2: expected "ball" but was "car"
+at SoftAssertionsTest.lambda$test$1(SoftAssertionsTest.java:27)
+2) 
+Expecting actual:
+  ["ball", "apple", "car"]
+to contain exactly (and in same order):
+  ["apple", "car", "ball"]
+but there were differences at these indexes:
+  - element at index 0: expected "apple" but was "ball"
+  - element at index 1: expected "car" but was "apple"
+  - element at index 2: expected "ball" but was "car"
+at SoftAssertionsTest.lambda$test$1(SoftAssertionsTest.java:29)
+```
+
+# AssertJ Custom Assertions For Selenium WebDriver:
+
+As we have seen above, AssertJ covers most of the data types for your assertions. It might be more than enough for our Selenium automated tests. For example, if we need to check if a WebElement is displayed.
+
+```java
+WebElement element = driver.findElement(By.id("id"));
+//isDisplayed check
+assertThat(element.isDisplayed()).isTrue();
+```
+
+However, it would be cool to have a separate assertion library for WebElement – to maintain a well readable and reusable code.
+
+To implement your own assertion, create a new class by extending AbstractAssert class. Check this below sample for WebElement assertion.
+
+```java
+import org.assertj.core.api.AbstractAssert;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class WebElementAssert extends AbstractAssert<WebElementAssert, WebElement> {
+
+    private WebElementAssert(WebElement webElement) {
+        super(webElement, WebElementAssert.class);
+    }
+
+    public static WebElementAssert assertThat(WebElement element){
+        return new WebElementAssert(element);
+    }
+
+    public WebElementAssert isDisplayed() {
+        isNotNull();
+        if(!actual.isDisplayed()) {
+            failWithMessage("Expected the element to be displayed. But it was not..!");
+        }
+        return this;
+    }
+
+    public WebElementAssert isEnabled(){
+        isNotNull();
+        //check condition
+        if(!actual.isEnabled()){
+            failWithMessage("Expected element to be enabled. But was not!!");
+        }
+        return this;
+    }
+
+    public WebElementAssert hasAttributeValue(String attr, String value){
+        isNotNull();
+        //check condition
+        if(!actual.getAttribute(attr).equals(value)){
+            failWithMessage("Expected element to have attr <%s> value as <%s>. But was not!!", attr, value);
+        }
+        return this;
+    }
+
+    public WebElementAssert isClickable(WebDriverWait wait) {
+        isNotNull();
+        //check condition
+        try {
+            wait.withMessage("Check element to be clickable")
+                    .until(ExpectedConditions.elementToBeClickable(actual));
+        } catch (Exception e) {
+            failWithMessage("Element is not clickable !!!");
+        }
+        return this;
+    }
+
+    public WebElementAssert isButton(){
+        isNotNull();
+        //check condition
+        if(!(actual.getTagName().equalsIgnoreCase("button") || actual.getAttribute("type").equalsIgnoreCase("button"))){
+            failWithMessage("Expected element to be a button. But was not!!");
+        }
+        return this;
+    }
+
+    public WebElementAssert isLink(){
+        isNotNull();
+        //check condition
+        if(!actual.getTagName().equalsIgnoreCase("a")){
+            failWithMessage("Expected element to be a link. But was not!!");
+        }
+        return this;
+    }
+
+}
+```
+
+We can write same custom assertion for Page as well.
+
+```java
+import org.assertj.core.api.AbstractAssert;
+import org.codewithsitangshu.custom.ui.pages.BasePage;
+
+public class PageAssert extends AbstractAssert<PageAssert, BasePage> {
+
+    private PageAssert(BasePage basePage) {
+        super(basePage, PageAssert.class);
+    }
+
+    public static PageAssert assertThat(BasePage page){
+        return new PageAssert(page);
+    }
+
+    public PageAssert isAt(){
+        isNotNull();
+        if(!actual.isAt()){
+            failWithMessage("Page is not displayed");
+        }
+        return this;
+    }
+
+}
+```
+Now lets use our assertion library. <br>
+
+For Page classes.
+
+```java
+public class HomePageTour extends BasePage {
+
+    @Getter
+    @FindBy(xpath = "//*[contains(@class,'shop-menu')]//a[normalize-space()='Home']")
+    private WebElement homeButton;
+
+    @Getter
+    @FindBy(xpath = "//*[@class='left-sidebar']//h2[text()='Category']")
+    private WebElement categorySection;
+
+    public HomePageTour(WebDriver driver) {
+        super(driver);
+    }
+
+    @Override
+    public boolean isAt() {
+        return this.driver.getTitle().equals("Automation Exercise");
+    }
+
+    public void goTo(){
+        this.driver.get("https://automationexercise.com/");
+        assertThat(homeButton)
+                .isDisplayed()
+                .isClickable(wait);
+    }
+
+}
+```
+
+For Test Classes.
+
+```java
+public class HomePageTest extends BaseTest {
+
+    private HomePageTour homePageTour;
+
+    @BeforeTest
+    public void pageSetup(){
+        this.homePageTour = new HomePageTour(driver);
+    }
+
+    @Test
+    public void launchSite(){
+        this.homePageTour.goTo();
+        assertThat(this.homePageTour).isAt();
+    }
+
+    @Test
+    public void verifyCategorySection() {
+        assertThat(this.homePageTour.getCategorySection())
+                .isDisplayed()
+                .isEnabled();
+    }
+}
+```
+
+# AssertJ Custom Soft Assertions For Selenium WebDriver:

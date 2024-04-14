@@ -8,7 +8,7 @@ import org.openqa.selenium.support.FindBy;
 
 import static org.codewithsitangshu.custom.ui.assertion.WebElementAssert.assertThat;
 
-public class HomePageTour extends BasePage {
+public class HomePageTourWithSoftAssert extends BasePage {
 
     @Getter
     @FindBy(xpath = "//*[contains(@class,'shop-menu')]//a[normalize-space()='Home']")
@@ -18,7 +18,7 @@ public class HomePageTour extends BasePage {
     @FindBy(xpath = "//*[@class='left-sidebar']//h2[text()='Category']")
     private WebElement categorySection;
 
-    public HomePageTour(WebDriver driver) {
+    public HomePageTourWithSoftAssert(WebDriver driver) {
         super(driver);
     }
 
@@ -29,9 +29,12 @@ public class HomePageTour extends BasePage {
 
     public void goTo(){
         this.driver.get("https://automationexercise.com/");
-        assertThat(homeButton)
-                .isDisplayed()
-                .isClickable(wait);
+        assertSoftly(s -> {
+            s.assertThat(homeButton)
+                    .isDisplayed()
+                    .isEnabled()
+                    .isClickable(wait);
+        });
     }
 
 }

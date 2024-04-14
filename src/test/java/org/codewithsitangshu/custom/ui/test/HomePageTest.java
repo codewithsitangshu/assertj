@@ -25,7 +25,4 @@ public class HomePageTest extends BaseTest {
                 .isDisplayed()
                 .isEnabled();
     }
-
-
-
 }
