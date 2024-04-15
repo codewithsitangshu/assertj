@@ -1,4 +1,4 @@
-package org.codewithsitangshu.custom.ui.test;
+package org.codewithsitangshu.custom.ui.test.ui;
 
 import org.codewithsitangshu.custom.ui.pages.home.HomePageTour;
 import org.testng.annotations.BeforeTest;

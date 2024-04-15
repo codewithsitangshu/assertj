@@ -6,8 +6,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 
-import static org.codewithsitangshu.custom.ui.assertion.WebElementAssert.assertThat;
-
 public class HomePageTourWithSoftAssert extends BasePage {
 
     @Getter

@@ -1,4 +1,4 @@
-package org.codewithsitangshu.custom.ui.test;
+package org.codewithsitangshu.custom.ui.test.ui;
 
 import org.codewithsitangshu.custom.ui.assertion.PageAssert;
 import org.codewithsitangshu.custom.ui.assertion.WebElementAssert;

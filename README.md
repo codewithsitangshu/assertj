@@ -642,3 +642,243 @@ assertSoftly(s -> {
                     .isClickable(wait);
 });
 ```
+
+# AssertJ Custom Assertions For Rest Assured:
+
+We can also create some cool assertion for Rest Assured to make api test easy.
+
+- First we need to create one class **RestApiResponse** that will call from every test call after getting response from API. This class will convert Response object to a desire format.
+
+```java
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.restassured.http.Headers;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class RestApiResponse {
+
+    // Getters for status code, body, and headers
+    private int statusCode;
+    private String body;
+    private Map<String, String> headers;
+    private ObjectMapper objectMapper;
+
+    // Constructor
+    public RestApiResponse(int statusCode, String body, Headers headers) {
+        this.statusCode = statusCode;
+        this.body = body;
+        this.headers = convertHeadersToMap(headers);
+        this.objectMapper = new ObjectMapper();
+    }
+
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public String getHeader(String headerName) {
+        return headers.get(headerName);
+    }
+
+    // Convert Headers to Map<String, String>
+    private Map<String, String> convertHeadersToMap(Headers headers) {
+        Map<String, String> headersMap = new HashMap<>();
+        for (io.restassured.http.Header header : headers) {
+            headersMap.put(header.getName(), header.getValue());
+        }
+        return headersMap;
+    }
+
+    // Parse JSON response body to Map
+    public Map<String, Object> parseJsonBody() throws Exception {
+        return objectMapper.readValue(body, new TypeReference<Map<String, Object>>() {});
+    }
+    
+    // Can add more as per need
+
+}
+```
+
+- **RestApiResponseAssert** class is a custom assertion to test api. This implementation is same as previous **WebElementAssert** class.
+
+```java
+import io.restassured.path.json.JsonPath;
+import org.assertj.core.api.AbstractAssert;
+
+import java.util.List;
+
+public class RestApiResponseAssert extends AbstractAssert<RestApiResponseAssert , RestApiResponse> {
+
+    public RestApiResponseAssert(RestApiResponse actual) {
+        super(actual, RestApiResponseAssert.class);
+    }
+
+    public static RestApiResponseAssert assertThat(RestApiResponse actual){
+        return new RestApiResponseAssert(actual);
+    }
+
+    public RestApiResponseAssert hasStatusCode(int expectedStatusCode) {
+        isNotNull();
+        int actualStatusCode = actual.getStatusCode();
+        if (actualStatusCode != expectedStatusCode) {
+            failWithMessage("Expected status code to be <%d> but was <%d>", expectedStatusCode, actualStatusCode);
+        }
+        return this;
+    }
+
+    public RestApiResponseAssert hasResponseBody(String expectedBody) {
+        isNotNull();
+        String actualBody = actual.getBody();
+        if (!actualBody.equals(expectedBody)) {
+            failWithMessage("Expected response body to be <%s> but was <%s>", expectedBody, actualBody);
+        }
+        return this;
+    }
+
+    public RestApiResponseAssert hasResponseHeader(String headerName, String expectedValue) {
+        isNotNull();
+        String actualValue = actual.getHeader(headerName);
+        if (!actualValue.equals(expectedValue)) {
+            failWithMessage("Expected header <%s> to have value <%s> but was <%s>", headerName, expectedValue, actualValue);
+        }
+        return this;
+    }
+
+    public RestApiResponseAssert hasResponseHeaderContaining(String headerName, String expectedSubstring) {
+        isNotNull();
+        String actualValue = actual.getHeader(headerName);
+        if (!actualValue.contains(expectedSubstring)) {
+            failWithMessage("Expected header <%s> to contain <%s> but was <%s>", headerName, expectedSubstring, actualValue);
+        }
+        return this;
+    }
+
+    public RestApiResponseAssert hasResponseHeaderMatching(String headerName, String regex) {
+        isNotNull();
+        String actualValue = actual.getHeader(headerName);
+        if (!actualValue.matches(regex)) {
+            failWithMessage("Expected header <%s> to match regex <%s> but was <%s>", headerName, regex, actualValue);
+        }
+        return this;
+    }
+
+    public RestApiResponseAssert hasJsonPathValue(String jsonPath, Object expectedValue) {
+        isNotNull();
+        JsonPath jsonPathEvaluator = JsonPath.from(actual.getBody());
+        Object actualValue = jsonPathEvaluator.get(jsonPath);
+        if (!actualValue.equals(expectedValue)) {
+            failWithMessage("Expected JSON path <%s> to have value <%s> but was <%s>", jsonPath, expectedValue, actualValue);
+        }
+        return this;
+    }
+
+    public RestApiResponseAssert hasJsonPathStringValue(String jsonPath, String expectedValue) {
+        isNotNull();
+        JsonPath jsonPathEvaluator = JsonPath.from(actual.getBody());
+        String actualValue = jsonPathEvaluator.getString(jsonPath);
+        if (!actualValue.equals(expectedValue)) {
+            failWithMessage("Expected JSON path <%s> to have string value <%s> but was <%s>", jsonPath, expectedValue, actualValue);
+        }
+        return this;
+    }
+
+    public RestApiResponseAssert hasJsonPathBooleanValue(String jsonPath, boolean expectedValue) {
+        isNotNull();
+        JsonPath jsonPathEvaluator = JsonPath.from(actual.getBody());
+        boolean actualValue = jsonPathEvaluator.getBoolean(jsonPath);
+        if (actualValue != expectedValue) {
+            failWithMessage("Expected JSON path <%s> to have boolean value <%s> but was <%s>", jsonPath, expectedValue, actualValue);
+        }
+        return this;
+    }
+
+    public RestApiResponseAssert hasJsonPathIntegerValue(String jsonPath, int expectedValue) {
+        isNotNull();
+        JsonPath jsonPathEvaluator = JsonPath.from(actual.getBody());
+        int actualValue = jsonPathEvaluator.getInt(jsonPath);
+        if (actualValue != expectedValue) {
+            failWithMessage("Expected JSON path <%s> to have integer value <%s> but was <%s>", jsonPath, expectedValue, actualValue);
+        }
+        return this;
+    }
+
+    public RestApiResponseAssert hasJsonPathListSize(String jsonPath, int expectedSize) {
+        isNotNull();
+        JsonPath jsonPathEvaluator = JsonPath.from(actual.getBody());
+        List<Object> list = jsonPathEvaluator.getList(jsonPath);
+        if (list.size() != expectedSize) {
+            failWithMessage("Expected JSON path <%s> to have list size <%s> but was <%s>", jsonPath, expectedSize, list.size());
+        }
+        return this;
+    }
+
+    // Add more JSON-specific assertion methods as needed...
+}
+```
+
+- We need one method that will convert Response to **RestApiResponse** type. You can place this to **BaseAPI** or **Util** class.
+
+```java
+// Utility method to convert RestAssured's Response to custom RestApiResponse
+public RestApiResponse convertResponseToRestApiResponse(Response response) {
+    int statusCode = response.getStatusCode();
+    String body = response.getBody().asString();
+    Headers headers = response.getHeaders();
+    return new RestApiResponse(statusCode, body, headers);
+}
+```
+
+- Now the time to test our api. Here is the api test class.
+
+```java
+@Test
+public void getListUser() {
+    String endpoint = "/api/users?page=2";
+    int expectedStatusCode = 200;
+    // Perform POST request
+    Response response = given().log().all()
+            .when()
+            .get(BASE_URL + endpoint);
+
+    RestApiResponse restApiResponse = convertResponseToRestApiResponse(response);
+    assertThat(restApiResponse)
+            .hasStatusCode(expectedStatusCode)
+            .hasJsonPathValue("data.findAll{i -> i.id == 11}.email[0]","george.edwards@reqres.in");
+}
+```
+
+```java
+@Test
+public void createUser() {
+    String endpoint = "/api/users";
+
+    UserDetails userDetails = new UserDetails();
+    userDetails.setName("morpheus");
+    userDetails.setJob("leader");
+
+    int expectedStatusCode = 201;
+    // Perform POST request
+    Response response = given().log().all()
+            .contentType(ContentType.JSON)
+            .body(userDetails)
+            .when()
+            .post(BASE_URL + endpoint);
+
+    RestApiResponse restApiResponse = convertResponseToRestApiResponse(response);
+    assertThat(restApiResponse)
+            .hasStatusCode(expectedStatusCode)
+            .hasJsonPathValue("name","morpheus")
+            .hasJsonPathValue("job","leader");
+    }
+```
+
+**Note:** RestAssured uses some special JsonPath library (which uses its own syntax in some cases) called [GPath](https://www.javadoc.io/doc/io.rest-assured/json-path/latest/index.html)
+
+# Summary
+
+AssertJ is one of the coolest libraries we have in Java. we were able to demonstrate AssertJ Custom Assertions in this tutorial. It makes your test automation script well readable and easily maintainable by chaining various assertions
